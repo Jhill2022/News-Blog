@@ -1,28 +1,137 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Weather from './Weather';
 import Calender from './Calender';
 import './News.css';
+import userImg from '../assets/images/user.jpg';
+import noImg from '../assets/images/no-img.png';
+import axios from 'axios';
+import NewsModal from './NewsModal';
+
+const categories = [
+  'general',
+  'world',
+  'business',
+  'technology',
+  'entertainment',
+  'sports',
+  'science',
+  'health',
+  'nation',
+];
+
 const News = () => {
+  const [headline, setHeadline] = useState(null);
+  const [news, setNews] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('general');
+
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showModal, setShowModal] = useState(false)
+  const [selectedArticle, setSelectedArticle] = useState(null)
+  useEffect(() => {
+    const fetchNews = async () => {
+      let url = `https://gnews.io/api/v4/top-headlines?category=${selectedCategory}&lang=en&apikey=59f2aba3ed3613c1117f30a8106882e4`;
+      
+      if (searchQuery) {
+         url = `https://gnews.io/api/v4/search?q=${searchQuery}&lang=en&apikey=59f2aba3ed3613c1117f30a8106882e4`;
+      }
+      const response = await axios.get(url);
+      const fetchedNews = response.data.articles;
+
+      fetchedNews.forEach((article) => {
+        if (!article.image) {
+          article.image = noImg;
+        }
+      });
+      setHeadline(fetchedNews[0]);
+      setNews(fetchedNews.slice(1, 7));
+    };
+    fetchNews();
+  }, [selectedCategory, searchQuery]);
+
+  const handleCategoryClick = (e, category) => {
+    e.preventDefault();
+    setSelectedCategory(category);
+    setSearchInput('');
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setSearchQuery(searchInput);
+  };
+
+  const handleArticleClick = (article) => {
+    setSelectedArticle(article)
+    setShowModal(true)
+    console.log(article)
+  }
   return (
     <div className="news">
       <header className="news-header">
         <h1 className="logo">News & Blogs</h1>
         <div className="search-bar">
-          <form>
-            <input type="text" placeholder='Search News...' />
-            <button type="submit"><i className="fa-solid fa-magnifying-glass"></i></button>
+          <form onSubmit={handleSearch}>
+            <input
+              value={searchInput}
+              type="text"
+              placeholder="Search News..."
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
+            <button type="submit">
+              <i className="fa-solid fa-magnifying-glass"></i>
+            </button>
           </form>
         </div>
       </header>
       <div className="news-content">
         <div className="navbar">
-          <div className="user">User</div>
-          <nav className="categories">Categories</nav>
+          <div className="user">
+            <img src={userImg} alt="User Image" />
+            <p>Mary's Blog</p>
+          </div>
+          <nav className="categories">
+            <h1 className="nav-heading">Categories</h1>
+            <div className="nav-links">
+              {categories.map((category) => (
+                <a
+                  href="#"
+                  key={category}
+                  onClick={(e) => handleCategoryClick(e, category)}
+                  className="nav-link"
+                >
+                  {category}
+                </a>
+              ))}
+              <a href="" className="nav-link">
+                Bookmarks <i className="fa-regular fa-bookmark"></i>
+              </a>
+            </div>
+          </nav>
         </div>
         <div className="news-section">
-          <div className="headline">Headline</div>
-          <div className="news-grid">News Grid</div>
+          {headline && (
+            <div className="headline" onClick={() => handleArticleClick(headline)}>
+              <img src={headline.image || noImg} alt={headline.title} />
+              <h2 className="headline-title">
+                {headline.title}
+                <i className="fa-regular fa-bookmark bookmark"></i>
+              </h2>
+            </div>
+          )}
+
+          <div className="news-grid">
+            {news.map((article, index) => (
+              <div key={index} className="news-grid-item" onClick={() => handleArticleClick(article)}>
+                <img src={article.image || noImg} alt={article.title} />
+                <h3>
+                  {article.title}{' '}
+                  <i className="fa-regular fa-bookmark bookmark"></i>
+                </h3>
+              </div>
+            ))}
+          </div>
         </div>
+        <NewsModal show={showModal} article={selectedArticle} onClose={() => setShowModal(false)}/>
         <div className="my-blogs">My Blogs</div>
         <div className="weather-calender">
           <Weather />
