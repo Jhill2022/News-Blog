@@ -198,7 +198,12 @@ const News = () => {
         </div>
       </div>
 
-      <footer className="news-footer">Footer</footer>
+      <footer className="news-footer">
+        <p>
+          <span>News & Blogs App</span>
+        </p>
+        <p>&copy; All Right Reserved. By Joshua Hill</p>
+      </footer>
     </div>
   );
 };
